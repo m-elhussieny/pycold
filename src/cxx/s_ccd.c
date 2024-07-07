@@ -167,12 +167,14 @@ int sccd(
         //  if monitor mode, will append output_nrtmodel default conse-1 obs
         for (k = 0; k < DEFAULT_CONSE_SCCD; k++)
         {
-            for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
-            {
-                clry[i_b][k] = nrt_model->obs[i_b][k];
-            }
-            clrx[k] = nrt_model->obs_date_since1982[k] + ORDINAL_LANDSAT4_LAUNCH;
-            n_clr++;
+	    if(k < conse){	
+            	for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
+                {
+                    clry[i_b][k] = nrt_model->obs[i_b][k];
+                }
+                clrx[k] = nrt_model->obs_date_since1982[k] + ORDINAL_LANDSAT4_LAUNCH;
+                n_clr++;
+	    }
         }
     }
 
