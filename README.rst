@@ -223,7 +223,8 @@ approach for monitoring forest disturbance using Landsat time series:
 Stochastic continuous change detection. *Remote Sensing of Environment*,
 *252*, 112167.
 
-`[OB-COLD] <https://www.sciencedirect.com/science/article/pii/S0034425723000135>` Ye, S., Zhu, Z., & Cao, G., (2022). Object-based continuous monitoring
+`[OB-COLD] <https://www.sciencedirect.com/science/article/pii/S0034425723000135>`_
+Ye, S., Zhu, Z., & Cao, G., (2022). Object-based continuous monitoring
 of land disturbance from dense Landsat time series. *Remote Sensing of Environment*, *287*, 113462.
 
 
