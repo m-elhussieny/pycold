@@ -1,0 +1,81 @@
+name: Win-Wheels
+
+on:
+  push:
+    # branches: [ devel ]
+    tags: [ '*' ]
+  workflow_dispatch:
+
+jobs:
+  build_win_wheels:
+    name: Build ${{ matrix.cibw-only }} wheel
+
+    strategy:
+      matrix: 
+        include:
+          #windows wheels
+          - cibw-only: cp38-win_amd64
+            os: windows-latest
+          - cibw-only: cp39-win_amd64
+            os: windows-latest
+          - cibw-only: cp310-win_amd64
+            os: windows-latest
+          - cibw-only: cp311-win_amd64
+            os: windows-latest
+          #linux wheels
+          # - cibw-only: cp38-manylinux_x86_64
+          #   os: ubuntu-latest
+          # - cibw-only: cp39-manylinux_x86_64
+          #   os: ubuntu-latest
+          # - cibw-only: cp310-manylinux_x86_64
+          #   os: ubuntu-latest
+          # - cibw-only: cp311-manylinux_x86_64
+          #   os: ubuntu-latest
+    defaults:
+      run: # 
+        shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }} 
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Set up MSYS2
+      if: ${{ runner.os == 'Windows' }}
+      uses: msys2/setup-msys2@v2
+      with:
+        release: false
+        msystem: ucrt64
+        install: make mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gcc-fortran mingw-w64-ucrt-x86_64-gcc-libgfortran mingw-w64-ucrt-x86_64-gsl mingw-w64-ucrt-x86_64-zlib
+
+    - name: Set up Python
+      id: setup-python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        update-environment: false
+
+    - name: replace '\' to '/' in python path, only effective on windows 
+      id: replace-path
+      run: echo "py_path=$(echo "${{ steps.setup-python.outputs.python-path }}" | sed 's/\\/\//g')" >> $GITHUB_OUTPUT
+
+    - name: install cibuildwheel
+      run: |
+        ${{ steps.replace-path.outputs.py_path }} -m pip install cibuildwheel
+
+    - name: Build binary wheels
+      run: |
+        echo "using python at: ${{ steps.replace-path.outputs.py_path }}"
+        ${{ steps.replace-path.outputs.py_path }} -m cibuildwheel --only ${{ matrix.cibw-only }}
+      env:
+        CIBW_TEST_SKIP: "*"
+
+    - name: Show built files
+      run: ls -la wheelhouse
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dist-wheels-${{ matrix.cibw-only }}
+        path: ./wheelhouse/*.whl
+
