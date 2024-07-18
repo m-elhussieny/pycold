@@ -281,7 +281,7 @@ if __name__ == "__main__":
     setupkw["package_dir"] = {
         "": "src/python",
     }
-
+    setupkw["cmake_args"] = []+ (['-GMSYS Makefiles' ] if os.name == 'nt' else [])
     ### <special non-xcookie generated code>
     setupkw['include_package_data'] = True
     setupkw['package_data'] = {

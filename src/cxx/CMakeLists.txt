@@ -4,6 +4,9 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 # Find required external libraries
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
+if(WIN32)
+  set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
 find_package(GSL REQUIRED)
 
 enable_language(Fortran)
@@ -57,24 +60,24 @@ else()  # build standalone program that accepts csv as input, mainly for testing
 
 endif()
 
-  #target_include_directories(
-  #  ${SCCD_MODULE_NAME}
-  #  PUBLIC
-  #      ${NumPy_INCLUDE_DIRS}
-  #      ${PYTHON_INCLUDE_DIRS}
-  #      ${CMAKE_CURRENT_SOURCE_DIR}
-  #)
+#target_include_directories(
+#  ${SCCD_MODULE_NAME}
+#  PUBLIC
+#      ${NumPy_INCLUDE_DIRS}
+#      ${PYTHON_INCLUDE_DIRS}
+#      ${CMAKE_CURRENT_SOURCE_DIR}
+#)
 
-  #message(STATUS "ZLIB::ZLIB = ${ZLIB::ZLIB}")
-  #message(STATUS "Threads::Threads = ${Threads::Threads}")
-  message(STATUS "Threads = ${Threads}")
+#message(STATUS "ZLIB::ZLIB = ${ZLIB::ZLIB}")
+#message(STATUS "Threads::Threads = ${Threads::Threads}")
+message(STATUS "Threads = ${Threads}")
 
- # LIB = -L$(GSL_SCI_LIB) -lz -lpthread -lgsl -lgslcblas -lgfortran -lm
-  target_link_libraries(
-    ${SCCD_MODULE_NAME} PUBLIC
-    ZLIB::ZLIB
-    Threads::Threads
-    GSL::gsl
-    GSL::gslcblas
-    GLMnet
-  )
+# LIB = -L$(GSL_SCI_LIB) -lz -lpthread -lgsl -lgslcblas -lgfortran -lm
+target_link_libraries(
+  ${SCCD_MODULE_NAME} PUBLIC
+  ZLIB::ZLIB
+  Threads::Threads
+  GSL::gsl
+  GSL::gslcblas
+  GLMnet
+)
