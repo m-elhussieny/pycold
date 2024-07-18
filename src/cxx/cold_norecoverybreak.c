@@ -1,3 +1,4 @@
+#include<stdint.h>
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
@@ -52,7 +53,7 @@ int getlabelfromNLCD(int maskval){
         return NA_VALUE;
 }
 
-long getMicrotime(){
+int64_t getMicrotime(){
     struct timeval currentTime;
     gettimeofday(&currentTime, NULL);
     return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
@@ -194,8 +195,8 @@ const char *check_parameter(int mode,char* in_path,char* out_path,int n_cores,
 //    Output_t*  rec_cg;                 /* CCDC outputted recorded  */
 //    int block_num;
 //    //block_num = (int)meta->lines / threads;
-//    long ms_start = getMicrotime();
-//    long ms_end;
+//    int64_t ms_start = getMicrotime();
+//    int64_t ms_end;
 //    char states_output_dir[MAX_STR_LEN];
 //    FILE *sampleFile;
 //    int pixel_qa;
@@ -4406,7 +4407,7 @@ int ccd_scanline
         valid_scene_count_scanline[i] = 0;
     }
 
-//    long ms_start = getMicrotime();
+//    int64_t ms_start = getMicrotime();
 //    if(format == ENVI_FORMAT)
     result = read_bip_lines(in_path, scene_list, row, num_samples, num_scenes, sdate, buf,
                             fmask_buf_scanline, valid_scene_count_scanline,valid_date_array_scanline,
@@ -4419,7 +4420,7 @@ int ccd_scanline
 //                                fmask_buf_scanline, valid_scene_count_scanline, valid_date_array_scanline,
 //                                sensor_buf);
 
-//    long ms_end = getMicrotime();
+//    int64_t ms_end = getMicrotime();
 //    char msg_str[MAX_STR_LEN];       /* Input data scene name                 */
 //    snprintf (msg_str, sizeof(msg_str), "CCDC reading scanline time (in ms)=%ld\n", ms_end - ms_start);
 //    LOG_MESSAGE (msg_str, FUNC_NAME);

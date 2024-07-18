@@ -1,3 +1,4 @@
+#include<stdint.h>
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
@@ -249,7 +250,7 @@ int main(int argc, char *argv[])
     int status;                      /* Return value from function call       */
     char FUNC_NAME[] = "main";       /* For printing error messages           */
 
-    long *sdate;                      /* Pointer to list of acquisition dates  */
+    int64_t *sdate;                      /* Pointer to list of acquisition dates  */
     char **scene_list;                /* 2-D array for list of scene IDs       */
 
     int num_scenes;                  /* Number of input scenes defined        */
@@ -265,8 +266,8 @@ int main(int argc, char *argv[])
     /**************************************************************************/
 
 
-    long *fmask_buf;        /* fmask buf, valid pixels only*/
-    long **buf;                       /* This is the image bands buffer, valid pixel only*/
+    int64_t *fmask_buf;        /* fmask buf, valid pixels only*/
+    int64_t **buf;                       /* This is the image bands buffer, valid pixel only*/
     // int n_working_process; /* total processes - 1 (master process)*/
     int i_col;
     FILE *fhoutput;
@@ -277,7 +278,7 @@ int main(int argc, char *argv[])
     //int *tmp_valid_date_array;             /* Sdate array after cfmask filtering    */
     Output_t* rec_cg;
     Output_sccd* s_rec_cg;
-    long *sensor_buf;
+    int64_t *sensor_buf;
     double tcg;
     int n_cm_maps = 0;
     short int* CM_outputs;
@@ -285,7 +286,7 @@ int main(int argc, char *argv[])
     unsigned char* CMdirection_outputs;
     // bool b_singleline = FALSE;
     int num_breakdatemaps;
-    long *breakdates_block;
+    int64_t *breakdates_block;
     // int sample_row = 0;
     // int sample_col = 0;
 
@@ -416,27 +417,27 @@ int main(int argc, char *argv[])
     /* memory for date array.                                     */
     /*                                                            */
     /**************************************************************/
-    sdate = (long *)malloc(num_scenes * sizeof(long));
+    sdate = (int64_t *)malloc(num_scenes * sizeof(int64_t));
 
     if (sdate == NULL)
     {
         RETURN_ERROR("ERROR allocating sdate memory", FUNC_NAME, FAILURE);
     }
 
-    buf = (long **) allocate_2d_array (TOTAL_IMAGE_BANDS, MAX_SCENE_LIST, sizeof (long));
+    buf = (int64_t **) allocate_2d_array (TOTAL_IMAGE_BANDS, MAX_SCENE_LIST, sizeof (int64_t));
     if(buf == NULL)
     {
         RETURN_ERROR ("Allocating buf", FUNC_NAME, FAILURE);
     }
 
 
-    fmask_buf = (long *) malloc(num_scenes * sizeof(long));
+    fmask_buf = (int64_t *) malloc(num_scenes * sizeof(int64_t));
     if(fmask_buf == NULL)
     {
         RETURN_ERROR ("Allocating fmask_buf", FUNC_NAME, FAILURE);
     }
 
-    sensor_buf = (long *) malloc(MAX_SCENE_LIST * sizeof (long));
+    sensor_buf = (int64_t *) malloc(MAX_SCENE_LIST * sizeof (int64_t));
     if(sensor_buf  == NULL)
     {
         RETURN_ERROR ("Allocating sensor_buf ", FUNC_NAME, FAILURE);
@@ -457,13 +458,13 @@ int main(int argc, char *argv[])
         if(row_count != headline) // we skip first line because it is a header
         {
             sdate[valid_scene_count] = atoi(strtok(csv_row, ","));
-            buf[0][valid_scene_count] = (long)atoi(strtok(NULL, ","));
-            buf[1][valid_scene_count] = (long)atoi(strtok(NULL, ","));
-            buf[2][valid_scene_count] = (long)atoi(strtok(NULL, ","));
-            buf[3][valid_scene_count] = (long)atoi(strtok(NULL, ","));
-            buf[4][valid_scene_count] = (long)atoi(strtok(NULL, ","));
-            buf[5][valid_scene_count] = (long)atoi(strtok(NULL, ","));
-            buf[6][valid_scene_count] = (long)atoi(strtok(NULL, ","));
+            buf[0][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
+            buf[1][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
+            buf[2][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
+            buf[3][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
+            buf[4][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
+            buf[5][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
+            buf[6][valid_scene_count] = (int64_t)atoi(strtok(NULL, ","));
             pixel_qa = atoi(strtok(NULL, ","));
     //                if (training_type == 1)
     //                {
@@ -473,7 +474,7 @@ int main(int argc, char *argv[])
     //                else
     //                   fmask_buf[valid_scene_count] = (short)qabitval(pixel_qa);
             //fmask_buf[valid_scene_count] = (short)qabitval(pixel_qa);
-            fmask_buf[valid_scene_count] = (long)pixel_qa;
+            fmask_buf[valid_scene_count] = (int64_t)pixel_qa;
             // sensor_buf[valid_scene_count] = (short)atoi(strtok(NULL, ","));
 
             valid_scene_count++;
@@ -558,7 +559,7 @@ int main(int argc, char *argv[])
     if(b_obcold_reconstruction == TRUE)
     {
 
-        breakdates_block = malloc(MAX_YEAR_RANGE * sizeof (long));
+        breakdates_block = malloc(MAX_YEAR_RANGE * sizeof (int64_t));
         if(breakdates_block == NULL)
         {
             RETURN_ERROR ("Allocating breakdates_block", FUNC_NAME, FAILURE);
