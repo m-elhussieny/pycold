@@ -346,7 +346,7 @@ def read_data(path):
     Returns:
         A 2D numpy array.
     """
-    return np.genfromtxt(path, delimiter=",", dtype=np.int64).T
+    return np.genfromtxt(path, delimiter=",", dtype=np.int64,encoding="utf-8").T
 
 
 def date2matordinal(year, month, day):
