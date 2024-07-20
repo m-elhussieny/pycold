@@ -10,6 +10,8 @@ from libcpp cimport bool
 from collections import namedtuple
 from copy import deepcopy
 cimport cython
+from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
+# instead of int32_t and int64_t for cross-platform compatibility,see https://github.com/ansys/pymapdl/issues/14
 from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 from .common import reccg_dt, sccd_dt, nrtqueue_dt, nrtmodel_dt, pinpoint_dt
 np.import_array()
@@ -20,9 +22,9 @@ try:
 except ImportError:
     pass  # The modules don't actually have to exists for Cython to use them as annotations
 
-cdef int NUM_FC = 40  # define the maximum number of outputted curves
-cdef int NUM_FC_SCCD = 40
-cdef int NUM_NRT_QUEUE = 240
+cdef int32_t NUM_FC = 40  # define the maximum number of outputted curves
+cdef int32_t NUM_FC_SCCD = 40
+cdef int32_t NUM_NRT_QUEUE = 240
 DEF DEFAULT_CONSE = 8
 DEF NRT_BAND = 6
 DEF SCCD_NUM_C = 6
@@ -30,11 +32,11 @@ DEF SCCD_NUM_C = 6
 
 cdef extern from "../../cxx/output.h":
     ctypedef struct Output_t:
-        int t_start
-        int t_end
-        int t_break
-        int pos
-        int num_obs
+        int32_t t_start
+        int32_t t_end
+        int32_t t_break
+        int32_t pos
+        int32_t num_obs
         short int category
         short int change_prob
         float coefs[7][8]
@@ -43,9 +45,9 @@ cdef extern from "../../cxx/output.h":
 
 cdef extern from "../../cxx/output.h":
     ctypedef struct Output_sccd:
-        int t_start
-        int t_break
-        int num_obs
+        int32_t t_start
+        int32_t t_break
+        int32_t num_obs
         float coefs[NRT_BAND][SCCD_NUM_C]
         float rmse[NRT_BAND]
         float magnitude[NRT_BAND]
@@ -64,14 +66,14 @@ cdef extern from "../../cxx/output.h":
         float covariance[NRT_BAND][36]
         float nrt_coefs[NRT_BAND][SCCD_NUM_C]
         float H[NRT_BAND]
-        unsigned int rmse_sum[NRT_BAND]
+        uint32_t rmse_sum[NRT_BAND]
         short int norm_cm;
         short int cm_angle;
         unsigned char conse_last;
 
 cdef extern from "../../cxx/output.h":
     ctypedef struct Output_sccd_pinpoint:
-        int t_break
+        int32_t t_break
         float coefs[NRT_BAND][SCCD_NUM_C]
         short int obs[NRT_BAND][DEFAULT_CONSE]
         short int obs_date_since1982[DEFAULT_CONSE]
@@ -80,26 +82,26 @@ cdef extern from "../../cxx/output.h":
 
 
 cdef extern from "../../cxx/cold.h":
-    cdef int cold(long *buf_b, long *buf_g, long *buf_r, long *buf_n, long *buf_s1, long *buf_s2,
-                  long *buf_t, long *fmask_buf, long *valid_date_array, int valid_num_scenes, int pos, 
-                  double tcg, int conse, bool b_output_cm, int starting_date, bool b_c2, Output_t *rec_cg,
-                  int *num_fc, int cm_output_interval, short int *cm_outputs,
+    cdef int32_t cold(int64_t *buf_b, int64_t *buf_g, int64_t *buf_r, int64_t *buf_n, int64_t *buf_s1, int64_t *buf_s2,
+                  int64_t *buf_t, int64_t *fmask_buf, int64_t *valid_date_array, int32_t valid_num_scenes, int32_t pos, 
+                  double tcg, int32_t conse, bool b_output_cm, int32_t starting_date, bool b_c2, Output_t *rec_cg,
+                  int32_t *num_fc, int32_t cm_output_interval, short int *cm_outputs,
                   short int *cm_outputs_date, double gap_days);
 
 
 cdef extern from "../../cxx/cold.h":
-    cdef int obcold_reconstruction_procedure(long *buf_b, long *buf_g, long *buf_r, long *buf_n, long *buf_s1,
-    long *buf_s2, long *buf_t,  long *fmask_buf, long *valid_date_array, int valid_num_scenes, long *break_dates,
-    int break_date_len, int pos, bool b_c2, int conse, Output_t *rec_cg, int *num_fc)
+    cdef int32_t obcold_reconstruction_procedure(int64_t *buf_b, int64_t *buf_g, int64_t *buf_r, int64_t *buf_n, int64_t *buf_s1,
+    int64_t *buf_s2, int64_t *buf_t,  int64_t *fmask_buf, int64_t *valid_date_array, int32_t valid_num_scenes, int64_t *break_dates,
+    int32_t break_date_len, int32_t pos, bool b_c2, int32_t conse, Output_t *rec_cg, int32_t *num_fc)
 
 
 
 cdef extern from "../../cxx/s_ccd.h":
-    cdef int sccd(long *buf_b, long *buf_g, long *buf_r, long *buf_n, long *buf_s1, long *buf_s2, long *buf_t,
-                  long *fmask_buf, long *valid_date_array, int valid_num_scenes, double tcg, int *num_fc, int *nrt_mode,
-                  Output_sccd *rec_cg, output_nrtmodel *nrt_model, int *num_nrt_queue, output_nrtqueue *nrt_queue,
-                  short int *min_rmse, int conse, bool b_c2, bool b_pinpoint, Output_sccd_pinpoint *rec_cg_pinpoint, 
-                  int *num_fc_pinpoint, double gate_tcg, double predictability_tcg)
+    cdef int32_t sccd(int64_t *buf_b, int64_t *buf_g, int64_t *buf_r, int64_t *buf_n, int64_t *buf_s1, int64_t *buf_s2, int64_t *buf_t,
+                  int64_t *fmask_buf, int64_t *valid_date_array, int32_t valid_num_scenes, double tcg, int32_t *num_fc, int32_t *nrt_mode,
+                  Output_sccd *rec_cg, output_nrtmodel *nrt_model, int32_t *num_nrt_queue, output_nrtqueue *nrt_queue,
+                  short int *min_rmse, int32_t conse, bool b_c2, bool b_pinpoint, Output_sccd_pinpoint *rec_cg_pinpoint, 
+                  int32_t *num_fc_pinpoint, double gate_tcg, double predictability_tcg)
 
 
 
@@ -110,9 +112,9 @@ cdef Output_sccd_pinpoint t4
 
 
 #cdef class SccdOutput:
-#    cdef public int position
+#    cdef public int32_t position
 #    cdef public np.ndarray rec_cg
-#    cdef public int nrt_mode
+#    cdef public int32_t nrt_mode
 #    cdef public tuple nrt_model
 #    cdef public np.ndarray nrt_queue
 #    def __init__(self, position, rec_cg, nrt_mode, nrt_model, nrt_queue):
@@ -135,8 +137,8 @@ cpdef _cold_detect(np.ndarray[np.int64_t, ndim=1, mode='c'] dates, np.ndarray[np
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_g, np.ndarray[np.int64_t, ndim=1, mode='c'] ts_r,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_n, np.ndarray[np.int64_t, ndim=1, mode='c'] ts_s1,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_s2, np.ndarray[np.int64_t, ndim=1, mode='c'] ts_t,
-                   np.ndarray[np.int64_t, ndim=1, mode='c'] qas, double t_cg = 15.0863, int pos=1, int conse=6,
-                   bint b_output_cm=False, int starting_date=0, int n_cm=0, int cm_output_interval=0, bint b_c2=True,
+                   np.ndarray[np.int64_t, ndim=1, mode='c'] qas, double t_cg = 15.0863, int32_t pos=1, int32_t conse=6,
+                   bint b_output_cm=False, int32_t starting_date=0, int32_t n_cm=0, int32_t cm_output_interval=0, bint b_c2=True,
                    double gap_days=365.25):
     """
     Helper function to do COLD algorithm.
@@ -168,21 +170,21 @@ cpdef _cold_detect(np.ndarray[np.int64_t, ndim=1, mode='c'] dates, np.ndarray[np
         change records: the COLD outputs that characterizes each temporal segment
     """
 
-    cdef int valid_num_scenes = qas.shape[0]
+    cdef int32_t valid_num_scenes = qas.shape[0]
     # allocate memory for rec_cg
-    cdef int num_fc = 0
+    cdef int32_t num_fc = 0
     cdef Output_t t
     rec_cg = np.zeros(NUM_FC, dtype=reccg_dt)
 
-    cdef long [:] dates_view = dates
-    cdef long [:] ts_b_view = ts_b
-    cdef long [:] ts_g_view = ts_g
-    cdef long [:] ts_r_view = ts_r
-    cdef long [:] ts_n_view = ts_n
-    cdef long [:] ts_s1_view = ts_s1
-    cdef long [:] ts_s2_view = ts_s2
-    cdef long [:] ts_t_view = ts_t
-    cdef long [:] qas_view = qas
+    cdef int64_t [:] dates_view = dates
+    cdef int64_t [:] ts_b_view = ts_b
+    cdef int64_t [:] ts_g_view = ts_g
+    cdef int64_t [:] ts_r_view = ts_r
+    cdef int64_t [:] ts_n_view = ts_n
+    cdef int64_t [:] ts_s1_view = ts_s1
+    cdef int64_t [:] ts_s2_view = ts_s2
+    cdef int64_t [:] ts_t_view = ts_t
+    cdef int64_t [:] qas_view = qas
     cdef Output_t [:] rec_cg_view = rec_cg
 
     # cm_outputs and cm_outputs_date are for object-based cold
@@ -228,8 +230,8 @@ cpdef _obcold_reconstruct(np.ndarray[np.int64_t, ndim=1, mode='c'] dates,
                           np.ndarray[np.int64_t, ndim=1, mode='c'] ts_s2,
                           np.ndarray[np.int64_t, ndim=1, mode='c'] ts_t,
                           np.ndarray[np.int64_t, ndim=1, mode='c'] qas,
-                          np.ndarray[np.int64_t, ndim=1, mode='c'] break_dates, int pos=1,
-                          int conse=6, bint b_c2=True):
+                          np.ndarray[np.int64_t, ndim=1, mode='c'] break_dates, int32_t pos=1,
+                          int32_t conse=6, bint b_c2=True):
     """
     re-contructructing change records using break dates.
         Parameters
@@ -253,23 +255,23 @@ cpdef _obcold_reconstruct(np.ndarray[np.int64_t, ndim=1, mode='c'] dates,
         change records: the COLD outputs that characterizes each temporal segment
     """
 
-    cdef int valid_num_scenes = qas.shape[0]
-    cdef int break_date_len = break_dates.shape[0]
+    cdef int32_t valid_num_scenes = qas.shape[0]
+    cdef int32_t break_date_len = break_dates.shape[0]
     # allocate memory for rec_cg
-    cdef int num_fc = 0
+    cdef int32_t num_fc = 0
     cdef Output_t t
     rec_cg = np.zeros(NUM_FC, dtype=reccg_dt)
 
-    cdef long [:] dates_view = dates
-    cdef long [:] ts_b_view = ts_b
-    cdef long [:] ts_g_view = ts_g
-    cdef long [:] ts_r_view = ts_r
-    cdef long [:] ts_n_view = ts_n
-    cdef long [:] ts_s1_view = ts_s1
-    cdef long [:] ts_s2_view = ts_s2
-    cdef long [:] ts_t_view = ts_t
-    cdef long [:] qas_view = qas
-    cdef long [:] break_dates_view = break_dates
+    cdef int64_t [:] dates_view = dates
+    cdef int64_t [:] ts_b_view = ts_b
+    cdef int64_t [:] ts_g_view = ts_g
+    cdef int64_t [:] ts_r_view = ts_r
+    cdef int64_t [:] ts_n_view = ts_n
+    cdef int64_t [:] ts_s1_view = ts_s1
+    cdef int64_t [:] ts_s2_view = ts_s2
+    cdef int64_t [:] ts_t_view = ts_t
+    cdef int64_t [:] qas_view = qas
+    cdef int64_t [:] break_dates_view = break_dates
     cdef Output_t [:] rec_cg_view = rec_cg
 
     result = obcold_reconstruction_procedure(&ts_b_view[0], &ts_g_view[0], &ts_r_view[0], &ts_n_view[0], &ts_s1_view[0],
@@ -293,7 +295,7 @@ cpdef _sccd_detect(np.ndarray[np.int64_t, ndim=1, mode='c'] dates,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_s2,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_t,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] qas,
-                   double t_cg = 15.0863, int pos=1, int conse=6, bint b_c2=True, b_pinpoint=False,
+                   double t_cg = 15.0863, int32_t pos=1, int32_t conse=6, bint b_c2=True, b_pinpoint=False,
                    double gate_tcg=9.236, double predictability_tcg=9.236):
     """
     S-CCD processing. It is required to be done before near real time monitoring
@@ -323,7 +325,7 @@ cpdef _sccd_detect(np.ndarray[np.int64_t, ndim=1, mode='c'] dates,
             change records: the S-CCD outputs that characterizes each temporal segment
             rec_cg:
             min_rmse
-            int nrt_mode,             /* O: 0 - void; 1 - monitor mode for standard; 2 - queue mode for standard;
+            int32_t nrt_mode,             /* O: 0 - void; 1 - monitor mode for standard; 2 - queue mode for standard;
                                         3 - monitor mode for snow; 4 - queue mode for snow */
             output_nrtmodel: nrt model if monitor mode, empty if queue mode
             output_nrtqueue: obs queue if queue mode, empty if monitor mode
@@ -331,16 +333,16 @@ cpdef _sccd_detect(np.ndarray[np.int64_t, ndim=1, mode='c'] dates,
     if conse > DEFAULT_CONSE:
         raise RuntimeError("The inputted conse is longer than the maximum conse for S-CCD: {}".format(DEFAULT_CONSE))
 
-    cdef int valid_num_scenes = qas.shape[0]
+    cdef int32_t valid_num_scenes = qas.shape[0]
     # allocate memory for rec_cg
-    cdef int num_fc = 0
-    cdef int num_nrt_queue = 0
-    cdef int num_fc_pinpoint = 0
+    cdef int32_t num_fc = 0
+    cdef int32_t num_nrt_queue = 0
+    cdef int32_t num_fc_pinpoint = 0
     rec_cg = np.zeros(NUM_FC_SCCD, dtype=sccd_dt)
     nrt_queue = np.zeros(NUM_NRT_QUEUE, dtype=nrtqueue_dt)
     nrt_model = np.zeros(1, dtype=nrtmodel_dt)
     rec_cg_pinpoint = np.zeros(NUM_FC_SCCD, dtype=pinpoint_dt)
-    cdef int nrt_mode = 0
+    cdef int32_t nrt_mode = 0
 
     if dates[-1] - dates[0] < 365.25:
         raise RuntimeError("The input data length is smaller than 1 year for pos = {}".format(pos))
@@ -349,15 +351,15 @@ cpdef _sccd_detect(np.ndarray[np.int64_t, ndim=1, mode='c'] dates,
     min_rmse = np.full(NRT_BAND, 0, dtype=np.short)
 
     # memory view
-    cdef long [:] dates_view = dates
-    cdef long [:] ts_b_view = ts_b
-    cdef long [:] ts_g_view = ts_g
-    cdef long [:] ts_r_view = ts_r
-    cdef long [:] ts_n_view = ts_n
-    cdef long [:] ts_s1_view = ts_s1
-    cdef long [:] ts_s2_view = ts_s2
-    cdef long [:] ts_t_view = ts_t
-    cdef long [:] qas_view = qas
+    cdef int64_t [:] dates_view = dates
+    cdef int64_t [:] ts_b_view = ts_b
+    cdef int64_t [:] ts_g_view = ts_g
+    cdef int64_t [:] ts_r_view = ts_r
+    cdef int64_t [:] ts_n_view = ts_n
+    cdef int64_t [:] ts_s1_view = ts_s1
+    cdef int64_t [:] ts_s2_view = ts_s2
+    cdef int64_t [:] ts_t_view = ts_t
+    cdef int64_t [:] qas_view = qas
     cdef short [:] min_rmse_view = min_rmse
 
     cdef Output_sccd [:] rec_cg_view = rec_cg
@@ -422,7 +424,7 @@ cpdef _sccd_update(sccd_pack,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_s2,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] ts_t,
                    np.ndarray[np.int64_t, ndim=1, mode='c'] qas,
-                   double t_cg = 15.0863, int pos=1, int conse=6, bint b_c2=True,
+                   double t_cg = 15.0863, int32_t pos=1, int32_t conse=6, bint b_c2=True,
                    double gate_tcg=9.236, double predictability_tcg=15.086):
     """
     SCCD online update for new observations
@@ -450,24 +452,24 @@ cpdef _sccd_update(sccd_pack,
        namedtupe: SccdOutput
             rec_cg: the S-CCD outputs that characterizes each temporal segment
             min_rmse
-            int nrt_mode,             /* O: 0 - void; 1 - monitor mode for standard; 2 - queue mode for standard;
+            int32_t nrt_mode,             /* O: 0 - void; 1 - monitor mode for standard; 2 - queue mode for standard;
                                             3 - monitor mode for snow; 4 - queue mode for snow  */
             nrt_model: nrt model if monitor mode, empty if queue mode
             nrt_queue: obs queue if queue mode, empty if monitor mode
     """
 
-    cdef int valid_num_scenes = qas.shape[0]
+    cdef int32_t valid_num_scenes = qas.shape[0]
     # allocate memory for rec_cg
-    # cdef int num_fc = 0
-    # cdef int num_nrt_queue = 0
-    cdef int nrt_mode = sccd_pack.nrt_mode
+    # cdef int32_t num_fc = 0
+    # cdef int32_t num_nrt_queue = 0
+    cdef int32_t nrt_mode = sccd_pack.nrt_mode
 
     if nrt_mode != 0 and nrt_mode % 10 != 1 and nrt_mode % 10 != 2 and nrt_mode != 3 and nrt_mode != 4 and nrt_mode != 5:
         raise RuntimeError("Invalid nrt_node input {} for pos = {} ".format(nrt_mode, pos))
 
-    cdef int num_fc = len(sccd_pack.rec_cg)
-    cdef int num_nrt_queue = len(sccd_pack.nrt_queue)
-    cdef int num_fc_pinpoint = 0
+    cdef int32_t num_fc = len(sccd_pack.rec_cg)
+    cdef int32_t num_nrt_queue = len(sccd_pack.nrt_queue)
+    cdef int32_t num_fc_pinpoint = 0
     cdef Output_sccd_pinpoint* rec_cg_pinpoint = <Output_sccd_pinpoint*> PyMem_Malloc(sizeof(t4))
 
     # grab inputs from the input
@@ -491,15 +493,15 @@ cpdef _sccd_update(sccd_pack,
     cdef output_nrtqueue [:] nrt_queue_view = nrt_queue_new
     cdef output_nrtmodel [:] nrt_model_view = nrt_model_new
     cdef short [:] min_rmse_view = min_rmse
-    cdef long [:] dates_view = dates
-    cdef long [:] ts_b_view = ts_b
-    cdef long [:] ts_g_view = ts_g
-    cdef long [:] ts_r_view = ts_r
-    cdef long [:] ts_n_view = ts_n
-    cdef long [:] ts_s1_view = ts_s1
-    cdef long [:] ts_s2_view = ts_s2
-    cdef long [:] ts_t_view = ts_t
-    cdef long [:] qas_view = qas
+    cdef int64_t [:] dates_view = dates
+    cdef int64_t [:] ts_b_view = ts_b
+    cdef int64_t [:] ts_g_view = ts_g
+    cdef int64_t [:] ts_r_view = ts_r
+    cdef int64_t [:] ts_n_view = ts_n
+    cdef int64_t [:] ts_s1_view = ts_s1
+    cdef int64_t [:] ts_s2_view = ts_s2
+    cdef int64_t [:] ts_t_view = ts_t
+    cdef int64_t [:] qas_view = qas
 
     result = sccd(&ts_b_view[0], &ts_g_view[0], &ts_r_view[0], &ts_n_view[0], &ts_s1_view[0], &ts_s2_view[0],
                   &ts_t_view[0], &qas_view[0], &dates_view[0], valid_num_scenes, t_cg, &num_fc, &nrt_mode, &rec_cg_view[0],

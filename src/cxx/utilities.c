@@ -1,3 +1,4 @@
+#include<stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -236,7 +237,7 @@ void quick_sort_double(double arr[], int left, int right)
 /******************************************************************************
 MODULE:  quick_sort_long
 
-PURPOSE:  sort the long data array based on yeardoy string
+PURPOSE:  sort the int64_t data array based on yeardoy string
 
 RETURN VALUE: None
 
@@ -247,7 +248,7 @@ Date        Programmer       Reason
 
 NOTES:
 ******************************************************************************/
-void quick_sort_long(long arr[], int left, int right)
+void quick_sort_long(int64_t arr[], int left, int right)
 {
     int index = partition_long (arr, left, right);
 
@@ -618,11 +619,11 @@ Date        Programmer       Reason
 
 NOTES:
 ******************************************************************************/
-int partition_long (long arr[], int left, int right)
+int partition_long (int64_t arr[], int left, int right)
 {
     int i = left, j = right;
-    long tmp;
-    long pivot = arr[(left + right) / 2];
+    int64_t tmp;
+    int64_t pivot = arr[(left + right) / 2];
 
     while (i <= j)
     {
@@ -902,7 +903,7 @@ Date        Programmer       Reason
 //    while (1)
 //    {
 //        /* optstring in call to getopt_long is empty since we will only
-//           support the long options */
+//           support the int64_t options */
 //        c = getopt_long (argc, argv, "", long_options, &option_index);
 //        if (c == -1)
 //        {
@@ -1156,14 +1157,14 @@ Date        Programmer       Reason
 
 int preprocessing
 (
-    long *buf_b,            /* I:  Landsat blue spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_g,            /* I:  Landsat green spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_r,            /* I:  Landsat red spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_n,            /* I:  Landsat NIR spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_s1,           /* I:  Landsat swir1 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_s2,           /* I:  Landsat swir2 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_t,            /* I:  Landsat thermal spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *fmask_buf,        /* I:   mask time series  */
+    int64_t *buf_b,            /* I:  Landsat blue spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_g,            /* I:  Landsat green spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_r,            /* I:  Landsat red spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_n,            /* I:  Landsat NIR spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_s1,           /* I:  Landsat swir1 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_s2,           /* I:  Landsat swir2 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_t,            /* I:  Landsat thermal spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *fmask_buf,        /* I:   mask time series  */
     int *valid_num_scenes, /* I/O: * number of scenes after cfmask counts and  */
     int *id_range,
     int *clear_sum,      /* I/O: Total number of clear cfmask pixels          */
@@ -1176,7 +1177,7 @@ int preprocessing
 {
 
     int i;
-    long buf_t_tmp ;
+    int64_t buf_t_tmp ;
 
     for (i = 0; i < *valid_num_scenes; i++)
     {
@@ -1185,7 +1186,7 @@ int preprocessing
             if(b_c2 == TRUE)
                buf_t_tmp = 0;
             else
-               buf_t_tmp = (long)(buf_t[i] * 10 - 27320);
+               buf_t_tmp = (int64_t)(buf_t[i] * 10 - 27320);
         }else{
             buf_t_tmp = 0;
         }

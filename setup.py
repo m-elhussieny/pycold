@@ -83,7 +83,7 @@ def parse_description():
     readme_fpath = join(dirname(__file__), "README.rst")
     # This breaks on pip install, so check that it exists.
     if exists(readme_fpath):
-        with open(readme_fpath, "r") as f:
+        with open(readme_fpath, "r",encoding='utf-8') as f:
             text = f.read()
         return text
     return ""
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     setupkw["package_dir"] = {
         "": "src/python",
     }
-
+    setupkw["cmake_args"] = []+ (['-GMSYS Makefiles' ] if os.name == 'nt' else [])
     ### <special non-xcookie generated code>
     setupkw['include_package_data'] = True
     setupkw['package_data'] = {

@@ -1,4 +1,5 @@
-﻿#include <gsl/gsl_blas.h>
+﻿#include<stdint.h>
+#include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include "math.h"
@@ -31,15 +32,15 @@ Date        Programmer       Reason
 04/14/2022   Su Ye         update
 ******************************************************************************/
 int sccd(
-    long *buf_b,                /* I:  Landsat blue spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_g,                /* I:  Landsat green spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_r,                /* I:  Landsat red spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_n,                /* I:  Landsat NIR spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_s1,               /* I:  Landsat swir1 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_s2,               /* I:  Landsat swir2 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *buf_t,                /* I:  Landsat thermal spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    long *fmask_buf,            /* I:  mask-based time series              */
-    long *valid_date_array,     /* I: valid date time series               */
+    int64_t *buf_b,                /* I:  Landsat blue spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_g,                /* I:  Landsat green spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_r,                /* I:  Landsat red spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_n,                /* I:  Landsat NIR spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_s1,               /* I:  Landsat swir1 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_s2,               /* I:  Landsat swir2 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_t,                /* I:  Landsat thermal spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *fmask_buf,            /* I:  mask-based time series              */
+    int64_t *valid_date_array,     /* I: valid date time series               */
     int valid_num_scenes,       /* I: number of valid scenes under cfmask fill counts  */
     double tcg,                 /* I: the change threshold  */
     int *num_fc,                /* O: number of fitting curves                       */
