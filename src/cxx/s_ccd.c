@@ -61,7 +61,7 @@ int sccd(
     int state_intervaldays,
     int *n_state,
     int64_t *state_days,
-    double *states_ensemble  /* O: states records for blue band */
+    double *states_ensemble /* O: states records for blue band */
 )
 {
     int clear_sum = 0;  /* Total number of clear cfmask pixels          */
@@ -312,18 +312,21 @@ int sccd(
         {
             state_days[*n_state] = days;
 
-            for(i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++){
-               states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + i] = (double)coefs_records[cur_coefs].nrt_coefs[i][0] + (double)coefs_records[cur_coefs].nrt_coefs[i][1] * days / SLOPE_SCALE; 
+            for (i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++)
+            {
+                states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + i] = (double)coefs_records[cur_coefs].nrt_coefs[i][0] + (double)coefs_records[cur_coefs].nrt_coefs[i][1] * days / SLOPE_SCALE;
             }
-            for(i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++){
-               states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + TOTAL_IMAGE_BANDS_SCCD + i] = (double)(coefs_records[cur_coefs].nrt_coefs[i][2] * cos((double)days * w) + coefs_records[cur_coefs].nrt_coefs[i][3] * sin((double)days * w));
+            for (i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++)
+            {
+                states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + TOTAL_IMAGE_BANDS_SCCD + i] = (double)(coefs_records[cur_coefs].nrt_coefs[i][2] * cos((double)days * w) + coefs_records[cur_coefs].nrt_coefs[i][3] * sin((double)days * w));
             }
-            for(i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++){
-               states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + 2 * TOTAL_IMAGE_BANDS_SCCD + i] = (double)(coefs_records[cur_coefs].nrt_coefs[i][4] * cos((double)days * w * 2) + coefs_records[cur_coefs].nrt_coefs[i][5] * sin((double)days * w * 2));
+            for (i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++)
+            {
+                states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + 2 * TOTAL_IMAGE_BANDS_SCCD + i] = (double)(coefs_records[cur_coefs].nrt_coefs[i][4] * cos((double)days * w * 2) + coefs_records[cur_coefs].nrt_coefs[i][5] * sin((double)days * w * 2));
             }
             *n_state = *n_state + 1;
             days = days + state_intervaldays;
-            if ((cur_coefs < n_coefs_records - 1) & (days >= coefs_records[cur_coefs+1].clrx))
+            if ((cur_coefs < n_coefs_records - 1) & (days >= coefs_records[cur_coefs + 1].clrx))
             {
                 cur_coefs = cur_coefs + 1;
             }
@@ -443,8 +446,6 @@ int step1_ssm_initialize(
     //            clrx_extend[i] = clrx[stable_start] - EXTEND_OBS_INTERVAL * EXTEND_OBS + EXTEND_OBS_INTERVAL * i;
     //            auto_ts_predict(clrx_extend, fit_cft, SCCD_NUM_C, i_b, i, i, &tmp);
 
-
-    
     //            clry_extend[i] = (float)floor(tmp);
     //        }else{
     //            clrx_extend[i] = clrx[stable_start + i - EXTEND_OBS];
@@ -461,7 +462,7 @@ int step1_ssm_initialize(
             // auto_ts_predict(clrx_extend, fit_cft, SCCD_NUM_C, i_b, i, i, &tmp);
             // clry_extend[i] = (float)tmp;
             clry_extend[i] = (float)clry[stable_start + i] - num_year_range * AVE_DAYS_IN_A_YEAR * fit_cft[i_b][1] / SLOPE_SCALE;
-            //clry_extend[i] = (float)clry[stable_start + i];
+            // clry_extend[i] = (float)clry[stable_start + i];
         }
         else
         {
@@ -510,7 +511,7 @@ int step1_ssm_initialize(
     // fit_cft2vec_a(fit_cft[i_b], state_a, clrx[stable_start], instance->m, instance->structure);
     /*  initialize p */
     // ini_p = caculate_ini_p(instance->m, state_a, instance->Z);
-    //ini_p = INI_P;
+    // ini_p = INI_P;
     ini_p = pow((fit_cft[i_b][1] * clrx_extend[stable_nobs] / SLOPE_SCALE + fit_cft[i_b][0]), 2) * INITIAL_P_RATIO;
 
     for (k = 0; k < instance->m; k++)
@@ -524,7 +525,6 @@ int step1_ssm_initialize(
             gsl_matrix_set(cov_p, k, k, ini_p);
         }
     }
-
 
     //        printf("instance->Q[1] = %f\n", gsl_matrix_get(instance->Q, 1, 1));
     //        printf("instance->Q[2] = %f\n", gsl_matrix_get(instance->Q, 2, 2));
@@ -543,7 +543,7 @@ int step1_ssm_initialize(
         *sum_square_vt = *sum_square_vt + (unsigned int)(vt * vt);
         if (i > stable_nobs - 1)
         {
-            
+
             if (b_coefs_records == TRUE)
             {
                 coefs_records[n_coefs_records_cp].clrx = clrx_extend[i];
@@ -2797,7 +2797,7 @@ int sccd_standard(
         {
             sum_square_vt[i_b] = nrt_model->rmse_sum[i_b];
             /*     6. initialize state-space model coefficients       */
-            base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
+            base_value = (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
             initialize_ssmconstants(DEFAULT_N_STATE, nrt_model->H[i_b], base_value, &instance[i_b]);
         }
     }
@@ -2913,11 +2913,11 @@ int sccd_standard(
                                      FUNC_NAME, FAILURE);
                     }
                 }
-                
+
                 for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
                 {
                     unadjusted_rmse = rmse_ini[i_b] * rmse_ini[i_b];
-                    base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[i_start] / SLOPE_SCALE;
+                    base_value = (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[i_start] / SLOPE_SCALE;
                     initialize_ssmconstants(DEFAULT_N_STATE, unadjusted_rmse, base_value, &instance[i_b]);
                     /**************************************************************/
                     /*                                                            */
@@ -2925,7 +2925,7 @@ int sccd_standard(
                     /*                                                            */
                     /**************************************************************/
                     step1_ssm_initialize(&instance[i_b], clrx, clry[i_b], i_start, i, fit_cft, cov_p[i_b],
-                                         i_b, &sum_square_vt[i_b], *n_clr, b_coefs_records, n_coefs_records, coefs_records);               
+                                         i_b, &sum_square_vt[i_b], *n_clr, b_coefs_records, n_coefs_records, coefs_records);
                 }
                 num_obs_processed = i - i_start + 1;
                 t_start = clrx[i_start];
@@ -3362,7 +3362,7 @@ int sccd_snow(
         /**************************************************************/
         for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
         {
-            base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
+            base_value = (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
             initialize_ssmconstants(DEFAULT_N_STATE, rmse[i_b], base_value, &instance[i_b]);
             /**************************************************************/
             /*                                                            */
@@ -3403,7 +3403,7 @@ int sccd_snow(
         {
             sum_square_vt[i_b] = nrt_model[0].rmse_sum[i_b];
             /*     6. initialize state-space model coefficients       */
-            base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
+            base_value = (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
             initialize_ssmconstants(DEFAULT_N_STATE, nrt_model[0].H[i_b], base_value, &instance[i_b]);
         }
 
