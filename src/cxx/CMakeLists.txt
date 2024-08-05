@@ -1,4 +1,4 @@
-option(BUILD_SCCD "Enable sccd c library" TRUE)
+option(BUILD_SCCD "Enable sccd c library for pycold" TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # Find required external libraries

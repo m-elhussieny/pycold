@@ -97,6 +97,18 @@ typedef struct
     short int clrx_since1982;
 } output_nrtqueue;
 
+typedef struct
+{
+    float nrt_coefs[TOTAL_IMAGE_BANDS_SCCD][SCCD_NUM_C];
+    int clrx;
+} nrt_coefs_records;
+
+typedef struct
+{
+    float nrt_coefs[TOTAL_IMAGE_BANDS_SCCD][HALF_DEFAULT_N_STATE];
+    int clrx;
+} nrt_state_records;
+
 /* SY 09242018 */
 int firstDegradationYear(
     Output_t *t,      /*I: outputted structure */

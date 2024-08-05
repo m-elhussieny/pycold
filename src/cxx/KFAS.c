@@ -392,6 +392,7 @@ int initialize_ssmconstants
 (
    int n_state,
    float rmse,
+   double base_value,
    ssmodel_constants *instance
 )
 {
@@ -566,11 +567,12 @@ int initialize_ssmconstants
     }
 
     /*   initialize Q     */
+    double ini_q00= pow(base_value, 2) / 10000.0 /  AVE_DAYS_IN_A_YEAR;
     for (i = 0; i < instance->m; i++)
         if (i == 1)
-           gsl_matrix_set(instance->Q, i, i, INI_Q00 / SLOPE_SS_SCALE);
+           gsl_matrix_set(instance->Q, i, i, ini_q00 / SLOPE_SS_SCALE);
         else
-           gsl_matrix_set(instance->Q, i, i, INI_Q00);
+           gsl_matrix_set(instance->Q, i, i, ini_q00);
 
     instance->H = rmse;
     return SUCCESS;
@@ -608,7 +610,7 @@ float caculate_ini_p(
    for (k = 0; k < m; k++)
        z_sum = z_sum + gsl_vector_get(z, k);
 
-   return pow((float)a_intensity * INITIAL_P_RATIO, 2) / z_sum;
+   return pow((float)a_intensity * 0.05, 2) / z_sum;
 }
 
 

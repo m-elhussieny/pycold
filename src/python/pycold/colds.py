@@ -28,6 +28,8 @@ _parameter_constraints: dict = {
     "t_cg_singleband_scale1000": [Interval(Real, None, None, closed="neither")],
     "t_angle_scale100": [Interval(Integral, 0, 18000, closed="neither")],
     "transform_mode": ["boolean"],
+    "state_intervaldays": [Interval(Real, 0.0, None, closed="left")],
+    
 }
 
 NUM_FC = 40  # define the maximum number of outputted curves
@@ -311,7 +313,7 @@ def sccd_detect(
     b_c2=False,
     b_pinpoint=False,
     gate_tcg=9.236,
-    b_monitor_init=False,
+    state_intervaldays=0.0
 ):
     """
     pixel-based offline SCCD algorithm.
@@ -339,6 +341,8 @@ def sccd_detect(
                         and threshold = gate_tcg, which are used to simulate the situation of NRT scenario and
                         for training a machine-learning model
     gate_tcg: the gate change magnitude threshold for defining anomaly
+    b_output_state: indicate whether to output state variables
+    state_intervaldays: the day interval for output states (only b_output_state is True)
     Note that passing 2-d array to c as 2-d pointer does not work, so have to pass separate bands
     Returns
     ----------
@@ -354,7 +358,7 @@ def sccd_detect(
         b_c2=b_c2,
         b_pinpoint=b_pinpoint,
         gate_tcg=gate_tcg,
-        b_monitor_init=b_monitor_init,
+        state_intervaldays=state_intervaldays
     )
     # make sure it is c contiguous array and 64 bit
     dates, ts_b, ts_g, ts_r, ts_n, ts_s1, ts_s2, ts_t, qas = _validate_data(
@@ -365,6 +369,10 @@ def sccd_detect(
     # tmp = copy.deepcopy(sccd_wrapper.sccd_detect(dates, ts_b, ts_g, ts_r, ts_n, ts_s1, ts_s2, ts_t, qas, t_cg,
     #                                 pos, conse, b_c2, b_pinpoint, gate_tcg, b_monitor_init))
     # return tmp
+    if state_intervaldays == 0:
+        b_output_state = False;
+    else:
+        b_output_state = True
     return _sccd_detect(
         dates,
         ts_b,
@@ -381,7 +389,9 @@ def sccd_detect(
         b_c2,
         b_pinpoint,
         gate_tcg,
-        b_monitor_init,
+        9.236,
+        b_output_state,
+        state_intervaldays
     )
 
 
@@ -467,7 +477,7 @@ def sccd_update(
         conse,
         b_c2,
         gate_tcg,
-        predictability_tcg,
+        predictability_tcg
     )
 
 

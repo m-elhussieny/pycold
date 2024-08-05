@@ -1,4 +1,4 @@
-﻿#include<stdint.h>
+﻿#include <stdint.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -32,31 +32,37 @@ Date        Programmer       Reason
 04/14/2022   Su Ye         update
 ******************************************************************************/
 int sccd(
-    int64_t *buf_b,                /* I:  Landsat blue spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *buf_g,                /* I:  Landsat green spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *buf_r,                /* I:  Landsat red spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *buf_n,                /* I:  Landsat NIR spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *buf_s1,               /* I:  Landsat swir1 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *buf_s2,               /* I:  Landsat swir2 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *buf_t,                /* I:  Landsat thermal spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
-    int64_t *fmask_buf,            /* I:  mask-based time series              */
-    int64_t *valid_date_array,     /* I: valid date time series               */
-    int valid_num_scenes,       /* I: number of valid scenes under cfmask fill counts  */
-    double tcg,                 /* I: the change threshold  */
-    int *num_fc,                /* O: number of fitting curves                       */
-    int *nrt_mode,              /* O: 2nd digit: 0 - void; 1 - monitor mode for standard; 2 - queue mode for standard; 3 - monitor mode for snow; 4 - queue mode for snow; 1st digit: 1 - predictability untest */
-    Output_sccd *rec_cg,        /* O: historical change records for SCCD results    */
-    output_nrtmodel *nrt_model, /* O: nrt model structure for SCCD results    */
-    int *num_obs_queue,         /* O: the number of multispectral observations    */
-    output_nrtqueue *obs_queue, /* O: multispectral observations in queue    */
-    short int *min_rmse,        /* O: adjusted rmse for the pixel    */
-    int conse,                  /* I: consecutive observation number for change detection   */
-    bool b_c2,                  /* I: a temporal parameter to indicate if collection 2. C2 needs ignoring thermal band due to the current low quality  */
-    bool b_pinpoint,
+    int64_t *buf_b,                        /* I:  Landsat blue spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_g,                        /* I:  Landsat green spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_r,                        /* I:  Landsat red spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_n,                        /* I:  Landsat NIR spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_s1,                       /* I:  Landsat swir1 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_s2,                       /* I:  Landsat swir2 spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *buf_t,                        /* I:  Landsat thermal spectral time series.The dimension is (n_obs, 7). Invalid (qa is filled value (255)) must be removed */
+    int64_t *fmask_buf,                    /* I:  mask-based time series              */
+    int64_t *valid_date_array,             /* I: valid date time series               */
+    int valid_num_scenes,                  /* I: number of valid scenes under cfmask fill counts  */
+    double tcg,                            /* I: the change threshold  */
+    int *num_fc,                           /* O: number of fitting curves                       */
+    int *nrt_mode,                         /* O: 2nd digit: 0 - void; 1 - monitor mode for standard; 2 - queue mode for standard; 3 - monitor mode for snow; 4 - queue mode for snow; 1st digit: 1 - predictability untest */
+    Output_sccd *rec_cg,                   /* O: historical change records for SCCD results    */
+    output_nrtmodel *nrt_model,            /* O: nrt model structure for SCCD results    */
+    int *num_obs_queue,                    /* O: the number of multispectral observations    */
+    output_nrtqueue *obs_queue,            /* O: multispectral observations in queue    */
+    short int *min_rmse,                   /* O: adjusted rmse for the pixel    */
+    int conse,                             /* I: consecutive observation number for change detection   */
+    bool b_c2,                             /* I: a temporal parameter to indicate if collection 2. C2 needs ignoring thermal band due to the current low quality  */
+    bool b_pinpoint,                       /* I: output pinpoint break for training purpose  */
     Output_sccd_pinpoint *rec_cg_pinpoint, /* O: historical change records for SCCD results    */
     int *num_fc_pinpoint,
     double gate_tcg,
-    double predictability_tcg)
+    double predictability_tcg,
+    bool b_output_state, /* I: indicate whether to output state  */
+    int state_intervaldays,
+    int *n_state,
+    int64_t *state_days,
+    double *states_ensemble  /* O: states records for blue band */
+)
 {
     int clear_sum = 0;  /* Total number of clear cfmask pixels          */
     int water_sum = 0;  /* counter for cfmask water pixels.             */
@@ -81,6 +87,13 @@ int sccd(
     int valid_nrt_mode[] = {0, 1, 2, 3, 4, 5, 11, 12};
     bool isinvalid_nrtmode = TRUE;
     int arrLen = sizeof valid_nrt_mode / sizeof valid_nrt_mode[0];
+    nrt_coefs_records *coefs_records;
+    int n_coefs_records = 0;
+    double days;
+    int cur_coefs = 0;
+    double w = TWO_PI / AVE_DAYS_IN_A_YEAR;
+
+    // nrt_coefs_records *coefs_records;
 
     for (int i = 0; i < arrLen; i++)
     {
@@ -120,6 +133,8 @@ int sccd(
     {
         RETURN_ERROR("Allocating clry memory", FUNC_NAME, FAILURE);
     }
+
+    coefs_records = (nrt_coefs_records *)malloc(len_clrx * sizeof(nrt_coefs_records));
 
     status = preprocessing(buf_b, buf_g, buf_r, buf_n, buf_s1, buf_s2, buf_t,
                            fmask_buf, &valid_num_scenes, id_range, &clear_sum,
@@ -168,14 +183,15 @@ int sccd(
         //  if monitor mode, will append output_nrtmodel default conse-1 obs
         for (k = 0; k < DEFAULT_CONSE_SCCD; k++)
         {
-	    if(k < conse){	
-            	for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
+            if (k < conse)
+            {
+                for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
                 {
                     clry[i_b][k] = nrt_model->obs[i_b][k];
                 }
                 clrx[k] = nrt_model->obs_date_since1982[k] + ORDINAL_LANDSAT4_LAUNCH;
                 n_clr++;
-	    }
+            }
         }
     }
 
@@ -242,9 +258,9 @@ int sccd(
                 }
             }
 
-            result = sccd_standard(clrx, clry, n_clr, tcg, rec_cg, num_fc, nrt_mode, nrt_model, num_obs_queue,
+            result = sccd_standard(clrx, clry, &n_clr, tcg, rec_cg, num_fc, nrt_mode, nrt_model, num_obs_queue,
                                    obs_queue, min_rmse, conse, b_pinpoint, rec_cg_pinpoint, num_fc_pinpoint,
-                                   gate_tcg, predictability_tcg);
+                                   gate_tcg, predictability_tcg, b_output_state, &n_coefs_records, coefs_records);
         }
     }
     else
@@ -286,7 +302,34 @@ int sccd(
             }
         }
 
-        result = sccd_snow(clrx, clry, n_clr, nrt_mode, nrt_model, num_obs_queue, obs_queue);
+        result = sccd_snow(clrx, clry, n_clr, nrt_mode, nrt_model, num_obs_queue, obs_queue, b_output_state, &n_coefs_records, coefs_records);
+    }
+
+    days = clrx[0];
+    if (b_output_state)
+    {
+        while (cur_coefs < n_coefs_records)
+        {
+            state_days[*n_state] = days;
+
+            for(i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++){
+               states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + i] = (double)coefs_records[cur_coefs].nrt_coefs[i][0] + (double)coefs_records[cur_coefs].nrt_coefs[i][1] * days / SLOPE_SCALE; 
+            }
+            for(i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++){
+               states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + TOTAL_IMAGE_BANDS_SCCD + i] = (double)(coefs_records[cur_coefs].nrt_coefs[i][2] * cos((double)days * w) + coefs_records[cur_coefs].nrt_coefs[i][3] * sin((double)days * w));
+            }
+            for(i = 0; i < TOTAL_IMAGE_BANDS_SCCD; i++){
+               states_ensemble[*n_state * 3 * TOTAL_IMAGE_BANDS_SCCD + 2 * TOTAL_IMAGE_BANDS_SCCD + i] = (double)(coefs_records[cur_coefs].nrt_coefs[i][4] * cos((double)days * w * 2) + coefs_records[cur_coefs].nrt_coefs[i][5] * sin((double)days * w * 2));
+            }
+            *n_state = *n_state + 1;
+            days = days + state_intervaldays;
+            if ((cur_coefs < n_coefs_records - 1) & (days >= coefs_records[cur_coefs+1].clrx))
+            {
+                cur_coefs = cur_coefs + 1;
+            }
+            if (days > clrx[n_clr - conse]) // we will output the states for the last obs that can't reach conse observations
+                break;
+        }
     }
 
     free(clrx);
@@ -298,6 +341,7 @@ int sccd(
     }
 
     free(id_range);
+    free(coefs_records);
     return result;
 }
 
@@ -359,7 +403,10 @@ int step1_ssm_initialize(
     gsl_matrix *cov_p,           /* I/O:  initial P1  */
     int i_b,                     /* I:  the band order */
     unsigned int *sum_square_vt, /* I/O:  the sum of predicted square of residuals  */
-    int n_clr)
+    int n_clr,
+    bool b_coefs_records,
+    int *n_coefs_records,
+    nrt_coefs_records *coefs_records)
 {
     char FUNC_NAME[] = "step1_ssm_initialize";
     float *state_sum;
@@ -371,6 +418,9 @@ int step1_ssm_initialize(
     int num_year_range = (int)ceil((clrx[stable_end] - clrx[stable_start] + 1) / AVE_DAYS_IN_A_YEAR);
     int stable_nobs = stable_end - stable_start + 1;
     gsl_vector *state_a;
+    int n_coefs_records_cp = *n_coefs_records;
+    double tmp;
+
     // we need add an additional obs to allow KF_ts_filter_regular
     clrx_extend = (int *)malloc((stable_nobs * 2 + 1) * sizeof(int));
     if (clrx_extend == NULL)
@@ -392,6 +442,9 @@ int step1_ssm_initialize(
     //        {
     //            clrx_extend[i] = clrx[stable_start] - EXTEND_OBS_INTERVAL * EXTEND_OBS + EXTEND_OBS_INTERVAL * i;
     //            auto_ts_predict(clrx_extend, fit_cft, SCCD_NUM_C, i_b, i, i, &tmp);
+
+
+    
     //            clry_extend[i] = (float)floor(tmp);
     //        }else{
     //            clrx_extend[i] = clrx[stable_start + i - EXTEND_OBS];
@@ -405,7 +458,10 @@ int step1_ssm_initialize(
         if (i < stable_nobs)
         {
             clrx_extend[i] = (int)(clrx[stable_start + i] - num_year_range * AVE_DAYS_IN_A_YEAR);
-            clry_extend[i] = (float)clry[stable_start + i];
+            // auto_ts_predict(clrx_extend, fit_cft, SCCD_NUM_C, i_b, i, i, &tmp);
+            // clry_extend[i] = (float)tmp;
+            clry_extend[i] = (float)clry[stable_start + i] - num_year_range * AVE_DAYS_IN_A_YEAR * fit_cft[i_b][1] / SLOPE_SCALE;
+            //clry_extend[i] = (float)clry[stable_start + i];
         }
         else
         {
@@ -454,7 +510,8 @@ int step1_ssm_initialize(
     // fit_cft2vec_a(fit_cft[i_b], state_a, clrx[stable_start], instance->m, instance->structure);
     /*  initialize p */
     // ini_p = caculate_ini_p(instance->m, state_a, instance->Z);
-    ini_p = INI_P;
+    //ini_p = INI_P;
+    ini_p = pow((fit_cft[i_b][1] * clrx_extend[stable_nobs] / SLOPE_SCALE + fit_cft[i_b][0]), 2) * INITIAL_P_RATIO;
 
     for (k = 0; k < instance->m; k++)
     {
@@ -467,6 +524,7 @@ int step1_ssm_initialize(
             gsl_matrix_set(cov_p, k, k, ini_p);
         }
     }
+
 
     //        printf("instance->Q[1] = %f\n", gsl_matrix_get(instance->Q, 1, 1));
     //        printf("instance->Q[2] = %f\n", gsl_matrix_get(instance->Q, 2, 2));
@@ -482,9 +540,25 @@ int step1_ssm_initialize(
     for (i = 0; i < 2 * stable_nobs; i++)
     {
         KF_ts_filter_regular(instance, clrx_extend, clry_extend, cov_p, fit_cft, i, i_b, &vt, FALSE);
+        *sum_square_vt = *sum_square_vt + (unsigned int)(vt * vt);
         if (i > stable_nobs - 1)
-            *sum_square_vt = *sum_square_vt + (unsigned int)(vt * vt);
+        {
+            
+            if (b_coefs_records == TRUE)
+            {
+                coefs_records[n_coefs_records_cp].clrx = clrx_extend[i];
+                for (k = 0; k < SCCD_NUM_C; k++)
+                {
+                    coefs_records[n_coefs_records_cp].nrt_coefs[i_b][k] = fit_cft[i_b][k];
+                }
+
+                n_coefs_records_cp = n_coefs_records_cp + 1;
+            }
+        }
     }
+    *sum_square_vt = (*sum_square_vt) / 2.0;
+    if (i_b == (TOTAL_IMAGE_BANDS_SCCD - 1))
+        *n_coefs_records = n_coefs_records_cp;
 
     //    for(i = 0; i < stable_nobs + EXTEND_OBS; i++){
     //        KF_ts_filter_regular(instance, clrx_extend, clry_extend, cov_p,fit_cft, i, i_b, &vt);
@@ -1311,7 +1385,7 @@ int step1_cold_initialize(
                              FUNC_NAME, FAILURE);
             }
         } //  for (i_ini = i_start-1; i_ini >= prev_i_break; i_ini--)
-    }     //  for if (i_start > prev_i_break)
+    } //  for if (i_start > prev_i_break)
 
     /**************************************************/
     /*                                                */
@@ -1695,7 +1769,10 @@ int step2_KF_ChangeDetection(
     short int *norm_cm_scale100,
     short int *mean_angle_scale100,
     float *CM_outputs,
-    float t_max_cg_sccd)
+    float t_max_cg_sccd,
+    bool b_coefs_records,
+    int *n_coefs_records,
+    nrt_coefs_records *coefs_records)
 {
     int i_b, b, m, k, j;
     int status;
@@ -2013,7 +2090,7 @@ int step2_KF_ChangeDetection(
         /**********************************************/
 
         RETURN_VALUE = CHANGEDETECTED;
-    }                                           // if (TRUE == change_flag)
+    } // if (TRUE == change_flag)
     else if (v_dif_mag_norm[0] > t_max_cg_sccd) // the current one
     {
         /**********************************************/
@@ -2055,6 +2132,18 @@ int step2_KF_ChangeDetection(
         {
             KF_ts_filter_regular(&instance[i_b], clrx, clry[i_b], cov_p[i_b],
                                  fit_cft, cur_i, i_b, &vt, steady);
+            if (b_coefs_records == TRUE)
+            {
+                coefs_records[*n_coefs_records].clrx = clrx[cur_i];
+                for (k = 0; k < SCCD_NUM_C; k++)
+                {
+                    coefs_records[*n_coefs_records].nrt_coefs[i_b][k] = fit_cft[i_b][k];
+                }
+                if (i_b == (TOTAL_IMAGE_BANDS_SCCD - 1))
+                {
+                    *n_coefs_records = *n_coefs_records + 1;
+                }
+            }
             sum_square_vt[i_b] = sum_square_vt[i_b] + vt * vt;
         }
         *num_obs_processed = *num_obs_processed + 1;
@@ -2555,7 +2644,7 @@ int step3_processing_end(
 int sccd_standard(
     int *clrx,    /* I: clear pixel curve in X direction (date)             */
     float **clry, /* I: clear pixel curve in Y direction (spectralbands)    */
-    int n_clr,
+    int *n_clr,
     double tcg,                 /* I:  threshold of change magnitude   */
     Output_sccd *rec_cg,        /* O: offline change records */
     int *num_fc,                /* O: intialize NUM of Functional Curves    */
@@ -2569,7 +2658,10 @@ int sccd_standard(
     Output_sccd_pinpoint *rec_cg_pinpoint, /* O: historical change records for SCCD results    */
     int *num_fc_pinpoint,
     double gate_tcg,
-    double predictability_tcg)
+    double predictability_tcg,
+    bool b_coefs_records,
+    int *n_coefs_records,
+    nrt_coefs_records *coefs_records)
 {
     int i_b;
     int status;
@@ -2584,6 +2676,7 @@ int sccd_standard(
     int i_span;
     double time_span; /* Span of time in no. of years.         */
     int update_num_c;
+    double base_value;
 
     ssmodel_constants *instance;
 
@@ -2601,7 +2694,7 @@ int sccd_standard(
     short int cm_angle_scale100 = 0;
     short int norm_cm_scale100 = NA_VALUE; /* I/O: maximum change magnitudes at every norm_cm_INTERVAL days */
     short int norm_cm_date = NA_VALUE;     /* I/O: dates for maximum change magnitudes at every norm_cm_INTERVAL days */
-    int n_cm = (clrx[n_clr - 1] - ORDINAL_DATE_1982_1_1) / AVE_DAYS_IN_A_YEAR + 1;
+    int n_cm = (clrx[*n_clr - 1] - ORDINAL_DATE_1982_1_1) / AVE_DAYS_IN_A_YEAR + 1;
     ;
     float *CM_outputs;
     bool change_detected = FALSE; // change_detected is only used to mark change to be detected for online mode
@@ -2667,7 +2760,7 @@ int sccd_standard(
         RETURN_ERROR("Allocating rmse_ini memory", FUNC_NAME, FAILURE);
     }
 
-    rec_v_dif = (float **)allocate_2d_array(TOTAL_IMAGE_BANDS_SCCD, n_clr,
+    rec_v_dif = (float **)allocate_2d_array(TOTAL_IMAGE_BANDS_SCCD, *n_clr,
                                             sizeof(float));
     if (rec_v_dif == NULL)
     {
@@ -2704,7 +2797,8 @@ int sccd_standard(
         {
             sum_square_vt[i_b] = nrt_model->rmse_sum[i_b];
             /*     6. initialize state-space model coefficients       */
-            initialize_ssmconstants(DEFAULT_N_STATE, nrt_model->H[i_b], &instance[i_b]);
+            base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
+            initialize_ssmconstants(DEFAULT_N_STATE, nrt_model->H[i_b], base_value, &instance[i_b]);
         }
     }
     else if ((*nrt_mode % 10 == NRT_QUEUE_STANDARD) | (*nrt_mode % 10 == NRT_MONITOR2QUEUE))
@@ -2750,7 +2844,7 @@ int sccd_standard(
     /* While loop - process til the conse -1 observation remains  */
     /*                                                            */
     /**************************************************************/
-    while (i + conse <= n_clr - 1) // the first conse obs have been investigated in the last run
+    while (i + conse <= *n_clr - 1) // the first conse obs have been investigated in the last run
     {
 
         if (0 == bl_train)
@@ -2783,7 +2877,7 @@ int sccd_standard(
                 /* step1: initialize a ccd model.                            */
                 /*                                                            */
                 /**************************************************************/
-                status = step1_cold_initialize(conse, min_rmse, &n_clr, tcg, &i_dense, num_fc, clrx,
+                status = step1_cold_initialize(conse, min_rmse, n_clr, tcg, &i_dense, num_fc, clrx,
                                                clry, &i, &i_start, rec_cg, N_TIMES * MID_NUM_C,
                                                &prev_i_break, rmse_ini);
             }
@@ -2819,18 +2913,19 @@ int sccd_standard(
                                      FUNC_NAME, FAILURE);
                     }
                 }
-
+                
                 for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
                 {
                     unadjusted_rmse = rmse_ini[i_b] * rmse_ini[i_b];
-                    initialize_ssmconstants(DEFAULT_N_STATE, unadjusted_rmse, &instance[i_b]);
+                    base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[i_start] / SLOPE_SCALE;
+                    initialize_ssmconstants(DEFAULT_N_STATE, unadjusted_rmse, base_value, &instance[i_b]);
                     /**************************************************************/
                     /*                                                            */
                     /*  initialize a and p                                        */
                     /*                                                            */
                     /**************************************************************/
                     step1_ssm_initialize(&instance[i_b], clrx, clry[i_b], i_start, i, fit_cft, cov_p[i_b],
-                                         i_b, &sum_square_vt[i_b], n_clr);
+                                         i_b, &sum_square_vt[i_b], *n_clr, b_coefs_records, n_coefs_records, coefs_records);               
                 }
                 num_obs_processed = i - i_start + 1;
                 t_start = clrx[i_start];
@@ -2841,9 +2936,9 @@ int sccd_standard(
                 // update mode - condition 1
                 // *nrt_mode = NRT_MONITOR_STANDARD;   // once the initialization is finished, the predictability is forced to be confirmed
             } /* else if(SUCCESS == status) */
-              //            time_taken = (clock() - (double)t_time)/CLOCKS_PER_SEC; // calculate the elapsed time
-              //            printf("Initialization took %f seconds to execute\n", time_taken);
-              //            t_time = clock();
+            //            time_taken = (clock() - (double)t_time)/CLOCKS_PER_SEC; // calculate the elapsed time
+            //            printf("Initialization took %f seconds to execute\n", time_taken);
+            //            t_time = clock();
 
         } /* if(0 == bl_train) */
         /**************************************************************/
@@ -2853,10 +2948,11 @@ int sccd_standard(
         /**************************************************************/
         else
         {
-            status = step2_KF_ChangeDetection(instance, clrx, clry, i, num_fc, conse, min_rmse, tcg, &n_clr,
+            status = step2_KF_ChangeDetection(instance, clrx, clry, i, num_fc, conse, min_rmse, tcg, n_clr,
                                               cov_p, fit_cft, rec_cg, sum_square_vt, &num_obs_processed,
                                               t_start, b_pinpoint, rec_cg_pinpoint, num_fc_pinpoint, gate_tcg,
-                                              &norm_cm_scale100, &cm_angle_scale100, CM_outputs, T_MAX_CG_SCCD);
+                                              &norm_cm_scale100, &cm_angle_scale100, CM_outputs, T_MAX_CG_SCCD,
+                                              b_coefs_records, n_coefs_records, coefs_records);
 
             if (status == CHANGEDETECTED)
             {
@@ -2939,7 +3035,7 @@ int sccd_standard(
             else if (status == FALSECHANGE)
             {
                 // printf("%d\n", clrx[i]);
-                n_clr--;
+                *n_clr = *n_clr - 1;
                 i--;
             }
             i++;
@@ -3028,7 +3124,7 @@ int sccd_standard(
             }
             else if (*nrt_mode % 10 == NRT_MONITOR2QUEUE)
             {
-                if (clrx[n_clr - conse] - nrt_model->obs_date_since1982[0] - ORDINAL_LANDSAT4_LAUNCH < STATUS_DELEY_DAYS)
+                if (clrx[*n_clr - conse] - nrt_model->obs_date_since1982[0] - ORDINAL_LANDSAT4_LAUNCH < STATUS_DELEY_DAYS)
                 {
                     prev_i_break = 0;
                 }
@@ -3041,7 +3137,7 @@ int sccd_standard(
     }
     *nrt_mode = new_mode;
 
-    status = step3_processing_end(instance, cov_p, fit_cft, clrx, clry, i, &n_clr, nrt_mode,
+    status = step3_processing_end(instance, cov_p, fit_cft, clrx, clry, i, n_clr, nrt_mode,
                                   i_start, prev_i_break, nrt_model, num_obs_queue,
                                   obs_queue, sum_square_vt, num_obs_processed, t_start,
                                   conse, min_rmse, gate_tcg, change_detected, predictability_tcg);
@@ -3102,8 +3198,10 @@ int sccd_snow(
     int *nrt_status,            /* O: 1 - monitor mode; 2 - queue mode    */
     output_nrtmodel *nrt_model, /* O: nrt records    */
     int *num_obs_queue,         /* O: the number of multispectral observations    */
-    output_nrtqueue *obs_queue  /* O: multispectral observations in queue    */
-)
+    output_nrtqueue *obs_queue, /* O: multispectral observations in queue    */
+    bool b_coefs_records,
+    int *n_coefs_records,
+    nrt_coefs_records *coefs_records)
 {
     int k;
     int i_start = 0;    /* the first observation for TSFit */
@@ -3117,6 +3215,7 @@ int sccd_snow(
     unsigned sum_square_vt[TOTAL_IMAGE_BANDS_SCCD] = {0, 0, 0, 0, 0, 0};
     int i;
     double vt;
+    double base_value;
 
     gsl_vector **state_a; /* a vector of a for current i,  multiple band */
     gsl_matrix **cov_p;
@@ -3263,14 +3362,16 @@ int sccd_snow(
         /**************************************************************/
         for (i_b = 0; i_b < TOTAL_IMAGE_BANDS_SCCD; i_b++)
         {
-            initialize_ssmconstants(DEFAULT_N_STATE, rmse[i_b], &instance[i_b]);
+            base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
+            initialize_ssmconstants(DEFAULT_N_STATE, rmse[i_b], base_value, &instance[i_b]);
             /**************************************************************/
             /*                                                            */
             /*  initialize a and p                                        */
             /*                                                            */
             /**************************************************************/
             step1_ssm_initialize(&instance[i_b], clrx, clry[i_b], i_start, n_clr - 1,
-                                 fit_cft, cov_p[i_b], i_b, &sum_square_vt[i_b], n_clr);
+                                 fit_cft, cov_p[i_b], i_b, &sum_square_vt[i_b], n_clr,
+                                 b_coefs_records, n_coefs_records, coefs_records);
             nrt_model[0].H[i_b] = instance[i_b].H;
         }
 
@@ -3302,7 +3403,8 @@ int sccd_snow(
         {
             sum_square_vt[i_b] = nrt_model[0].rmse_sum[i_b];
             /*     6. initialize state-space model coefficients       */
-            initialize_ssmconstants(DEFAULT_N_STATE, nrt_model[0].H[i_b], &instance[i_b]);
+            base_value =  (double)fit_cft[i_b][0] + (double)fit_cft[i_b][1] * clrx[0] / SLOPE_SCALE;
+            initialize_ssmconstants(DEFAULT_N_STATE, nrt_model[0].H[i_b], base_value, &instance[i_b]);
         }
 
         nrt_model[0].num_obs = nrt_model[0].num_obs + n_clr - DEFAULT_CONSE_SCCD;
@@ -3313,6 +3415,18 @@ int sccd_snow(
             {
                 KF_ts_filter_regular(&instance[i_b], clrx, clry[i_b], cov_p[i_b], fit_cft, i, i_b, &vt, FALSE);
                 sum_square_vt[i_b] = sum_square_vt[i_b] + (unsigned int)(vt * vt);
+                if (b_coefs_records == TRUE)
+                {
+                    coefs_records[*n_coefs_records].clrx = clrx[i];
+                    for (k = 0; k < SCCD_NUM_C; k++)
+                    {
+                        coefs_records[*n_coefs_records].nrt_coefs[i_b][k] = fit_cft[i_b][k];
+                    }
+                    if (i_b == (TOTAL_IMAGE_BANDS_SCCD - 1))
+                    {
+                        *n_coefs_records = *n_coefs_records + 1;
+                    }
+                }
             }
         }
     }

@@ -5,7 +5,7 @@
 
 /* from ccdc.c */
 #define TOTAL_IMAGE_BANDS 7      /* Number of image bands, for loops.   */
-#define TOTAL_IMAGE_BANDS_SCCD 6 /* Number of HLS image bands, for loops.   */
+#define TOTAL_IMAGE_BANDS_SCCD 6 /* Number of image bands, for loops.   */
 #define TOTAL_INDICES 0          /* Number of image bands, for loops. */
 #define TOTAL_BANDS 8            /* Total image plus mask bands, for loops.  HLS */
 #define MIN_NUM_C 4              /* Minimum number of coefficients           */
@@ -43,7 +43,7 @@
 /* Given an address returned by the allocate routine, get a pointer to the
    entire structure. */
 #define GET_ARRAY_STRUCTURE_FROM_PTR(ptr) \
-   ((LSRD_2D_ARRAY *)((char *)(ptr)-offsetof(LSRD_2D_ARRAY, memory_block)))
+   ((LSRD_2D_ARRAY *)((char *)(ptr) - offsetof(LSRD_2D_ARRAY, memory_block)))
 
 /* from input.c */
 // #define TOTAL_IMAGE_BANDS 7
@@ -97,16 +97,17 @@
 // #define CONSE 6           /* No. of CONSEquential pixels 4 bldg. model*/
 #define LASSO_MIN 6 /* No. of CONSEquential pixels 4 bldg. model*/
 
-#define INITIAL_P_RATIO 0.05
+#define INITIAL_P_RATIO 0.25
 #define SCCD_T_CONST 4.42
 
 #define DEFAULT_N_STATE 6
+#define HALF_DEFAULT_N_STATE 3
 #define NUM_LASSO_BANDS 5 /* Number of bands for Least Absolute Shrinkage */
                           /* and Selection Operator LASSO regressions */
 #define DEFAULT_COLD_TCG 15.0863
 
 #define INI_Q00 0.1 /* MATLAB default */
-#define INI_P 10000
+#define INI_P 1000000
 
 /* from ccd.c detection method*/
 // #define CCD 1
@@ -145,9 +146,10 @@
 
 #define KFAS_TOL 1E-14
 #define KFAS_LIK_C 0.5 * log(8.0 * atan(1.0))
-#define SLOPE_SS_SCALE 1000000
+#define SLOPE_SS_SCALE 10000000
 #define PINPOINT_CONSE 3
 #define MAX_SHORT 32767
 #define CORRECT_RATIO_PREDICTABILITY 0.5
 #define STATUS_DELEY_DAYS 15
+#define MAX_VALID_OBS 10000
 // #define RECENT_CHANGE_LAST_DAY 15

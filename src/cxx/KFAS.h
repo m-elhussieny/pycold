@@ -119,6 +119,7 @@ int initialize_ssmconstants
 (
    int n_state,
    float rmse,
+   double base_value,
    ssmodel_constants *instance
 );
 //typedef double optimfn(int n, double *par, void *ex);

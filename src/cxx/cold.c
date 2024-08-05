@@ -5054,12 +5054,21 @@ int inefficientobs_procedure
                     }
                  }
 
-                status = auto_ts_fit_float(clrx, clry, k, k, 0, i_span-1, MIN_NUM_C,
-                         fit_cft, &rmse[k], temp_v_dif);
+                if (i_span < MIN_NUM_C * N_TIMES)
+                {
+                    fit_cft[k][0] = 10000; // fixed value for saturated pixels
+                    for (i = 1; i < MAX_NUM_C; i++)
+                        fit_cft[k][i] = 0;
+                }
+                else
+                {
+                    status = auto_ts_fit_float(clrx, clry, k, k, 0, i_span-1, MIN_NUM_C,
+                            fit_cft, &rmse[k], temp_v_dif);
 
-                if (status != SUCCESS)
-                    RETURN_ERROR ("Calling auto_ts_fit_float\n",
-                           FUNC_NAME, EXIT_FAILURE);
+                    if (status != SUCCESS)
+                        RETURN_ERROR ("Calling auto_ts_fit_float\n",
+                            FUNC_NAME, EXIT_FAILURE);
+                }
 
               }
         }
