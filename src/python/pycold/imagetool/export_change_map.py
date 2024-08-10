@@ -317,7 +317,7 @@ def main(
     if coefs is not None:
         try:
             coefs = list(coefs.split(","))
-            coefs = [str(coef) for coef in coefs]
+            coefs = [str(coef).strip() for coef in coefs]
         except ValueError:
             print(
                 "Illegal coefs inputs: example, --coefs='a0, c1, a1, b1, a2, b2, a3, b3, cv, rmse'"

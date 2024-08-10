@@ -403,8 +403,8 @@ def main(
         if block_id > dataset_info.n_block_x * dataset_info.n_block_y:
             break
         # note that block_x and block_y start from 1
-        block_y = int((block_id - 1) / dataset_info.n_block_x) + 1
-        block_x = int((block_id - 1) % dataset_info.n_block_x) + 1
+        block_y = int((block_id) / dataset_info.n_block_x) + 1
+        block_x = int((block_id) % dataset_info.n_block_x) + 1
         if os.path.exists(join(result_path, "COLD_block{}_finished.txt".format(block_id))):
             print(
                 "Per-pixel COLD processing is finished for block_x{}_y{} ({})".format(
